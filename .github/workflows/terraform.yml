@@ -1,0 +1,96 @@
+name: "Terraform デプロイ"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Google Cloudの認証を設定
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Google Cloudプロジェクトの設定
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Terraformのセットアップ
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.0.0
+
+      - name: Terraformの初期化
+        id: init
+        run: terraform init
+
+      - name: Terraformのフォーマット検証
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraformの検証
+        id: validate
+        run: terraform validate
+
+      - name: Terraformプラン
+        id: plan
+        run: terraform plan -no-color -var="project_id=${{ vars.GCP_PROJECT_ID }}"
+        continue-on-error: true
+
+      - name: プルリクエストにプランを追加
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>詳細を表示</summary>
+
+            \`\`\`terraform
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *実行者: @${{ github.actor }}, アクション: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraformプランステータス
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraformの適用
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -var="project_id=${{ vars.GCP_PROJECT_ID }}"
