@@ -51,9 +51,28 @@ terraform apply
 
    - シークレット:
      - `GCP_SA_KEY`: Google Cloudサービスアカウントのキー（JSON形式）
+       - 重要: JSONキー全体をコピーして設定すること
+       - 設定方法: リポジトリの「Settings」→「Secrets and variables」→「Actions」→「New repository secret」
 
    - リポジトリ変数:
      - `GCP_PROJECT_ID`: 対象のGoogle CloudプロジェクトID
+       - 設定方法: リポジトリの「Settings」→「Secrets and variables」→「Actions」→「Variables」タブ→「New repository variable」
+
+### シークレット設定のトラブルシューティング
+
+もし`google-github-actions/auth failed`というエラーが発生した場合:
+
+1. `GCP_SA_KEY`シークレットが正しく設定されているか確認してください:
+   - サービスアカウントキーはJSON形式の全体をコピーして設定する必要があります
+   - 例: `{"type": "service_account", "project_id": "...", ...}`
+   - 部分的なキーや引用符だけをコピーしていないことを確認してください
+
+2. Forkされたリポジトリやプルリクエストからワークフローが実行される場合:
+   - デフォルトでは、シークレットはフォークされたリポジトリのワークフローには渡されません
+   - リポジトリの設定で「Actions」→「General」→「Fork pull request workflows from outside collaborators」を確認してください
+
+3. より安全な方法として、Workload Identity Federationの使用も検討できます:
+   - 設定方法: https://github.com/google-github-actions/auth#setting-up-workload-identity-federation
 
 ### ワークフローの動作
 
@@ -87,3 +106,5 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
 gcloud iam service-accounts keys create key.json \
   --iam-account=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 ```
+
+test
