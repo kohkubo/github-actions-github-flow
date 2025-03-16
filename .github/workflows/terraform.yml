@@ -31,7 +31,6 @@ jobs:
           if [ -n "${{ secrets.GCP_SA_KEY }}" ]; then echo "GCP_SA_KEY is set"; else echo "GCP_SA_KEY is not set"; fi
       # 方法1: サービスアカウントキーを使用する方法（推奨）
       - name: Google Cloudの認証を設定（サービスアカウントキー）
-        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
