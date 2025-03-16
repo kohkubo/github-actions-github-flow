@@ -22,6 +22,12 @@ jobs:
         working-directory: terraform
 
     steps:
+      - name: 環境変数が設定されているかのデバッグ
+        run: |
+          echo "GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}"
+          echo "GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}"
+
+
       - name: リポジトリのチェックアウト
         uses: actions/checkout@v4
 
