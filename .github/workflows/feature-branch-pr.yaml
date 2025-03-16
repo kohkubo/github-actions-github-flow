@@ -6,8 +6,8 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - main
-    paths-ignore:
-      - '!.github/workflows/feature-branch-pr.yml'
+    paths:
+      - 'test-dir/**'
 
 jobs:
   check_feature_branch:
@@ -19,6 +19,6 @@ jobs:
 
       - name: Your manual action
         run: |
-          echo "This action runs only for feature branch PRs to main"
+          echo "This action runs only for feature branch PRs to main with changes in test-dir"
           # ここに実行したいアクションのコマンドを記述します
           # 例: テストの実行、コード分析、デプロイなど
