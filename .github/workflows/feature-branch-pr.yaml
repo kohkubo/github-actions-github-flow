@@ -2,10 +2,6 @@ name: Feature Branch PR Manual Action
 
 on:
   workflow_dispatch:
-    inputs:
-      head_ref:
-        description: 'Pull Request Head Branch Name'
-        required: true
 
 jobs:
   check_feature_branch:
@@ -13,8 +9,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.inputs.head_ref }}
 
       - name: Check branch prefix and run action
         run: |
