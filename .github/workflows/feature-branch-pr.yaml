@@ -2,23 +2,27 @@ name: Feature Branch PR Manual Action
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-    paths-ignore:
-      - '!.github/workflows/feature-branch-pr.yml'
+    inputs:
+      head_ref:
+        description: 'Pull Request Head Branch Name'
+        required: true
 
 jobs:
   check_feature_branch:
     runs-on: ubuntu-latest
-    if: startsWith(github.head_ref, 'feature-')
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.head_ref }}
 
-      - name: Your manual action
+      - name: Check branch prefix and run action
         run: |
-          echo "This action runs only for feature branch PRs to main"
-          # ここに実行したいアクションのコマンドを記述します
-          # 例: テストの実行、コード分析、デプロイなど
+          if [[ "${{ github.event.inputs.head_ref }}" == feature-* ]]; then
+            echo "This action runs only for feature branch PRs to main"
+            # ここに実行したいアクションのコマンドを記述します
+            # 例: テストの実行、コード分析、デプロイなど
+          else
+            echo "This action is only for feature branch PRs. Current branch: ${{ github.event.inputs.head_ref }}"
+            exit 1
+          fi
